@@ -1,13 +1,17 @@
 from constants import PLAYERS, TEAMS
-from typing import List
+from typing import List, Tuple
 from copy import deepcopy
 
 
-def clean_the_data() -> List:
+def clean_the_data() -> Tuple:
 
     data_dictionary = deepcopy(PLAYERS)
 
     cleaned_data = []
+
+    experienced_players = []
+
+    inexperienced_players = []
 
     for player in data_dictionary:
         try:
@@ -18,15 +22,43 @@ def clean_the_data() -> List:
 
         if player["experience"] == "YES":
             player["experience"] = True
+            experienced_players.append(player["name"])
         elif player["experience"] == "NO":
             player["experience"] = False
+            inexperienced_players.append(player["name"])
+
+        player["guardians"] = player["guardians"].split('and')
 
         cleaned_data.append(player["name"])
 
-    return cleaned_data
+    return cleaned_data, experienced_players, inexperienced_players
 
 
-def balance_on_players(data: List):
+def balance_by_experience(experienced, inexperienced):
+
+    number_of_teams = len(TEAMS)
+
+    number_experienced = int(len(experienced)/number_of_teams)
+
+    number_inexperienced = int(len(inexperienced)/number_of_teams)
+
+    team_build = []
+
+    teams = deepcopy(TEAMS)
+
+    for t in teams:
+        experienced_group = experienced[0:number_experienced]
+        inexperienced_group = inexperienced[0:number_inexperienced]
+
+        team_build.append((t, experienced_group + inexperienced_group))
+
+        del experienced[0:number_experienced]
+        del inexperienced[0:number_inexperienced]
+
+    return team_build
+
+
+def balance_on_players(data):
 
     team_build = []
 
@@ -47,11 +79,17 @@ def balance_on_players(data: List):
 
 def create_teams():
 
-    clean_data = clean_the_data()
+    clean_data = clean_the_data()[0]
 
-    the_teams = balance_on_players(clean_data)
+    experienced_players = clean_the_data()[1]
 
-    return the_teams
+    inexperienced_players = clean_the_data()[2]
+
+    balanced_teams = balance_by_experience(experienced_players, inexperienced_players)
+
+    # the_teams = balance_on_players(clean_data)
+
+    return balanced_teams
 
 
 def display_menu():
